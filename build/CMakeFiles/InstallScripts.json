@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/MLLibraryRisk/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
