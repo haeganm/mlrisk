@@ -64,21 +64,15 @@ cd ML-Library---Risk-Position-Sizing
 ### 2. Build the Library
 
 ```bash
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake
-cmake ..
-
-# Build
-cmake --build . --config Release
+# Configure and build from repo root
+cmake -S . -B build
+cmake --build build --config Release
 ```
 
 ### 3. Run Tests
 
 ```bash
-# Run all tests (from build directory)
+# Run all tests
 ctest --test-dir build -C Release --output-on-failure
 
 # Or run directly
@@ -108,28 +102,22 @@ ctest --test-dir build -C Release --output-on-failure
 #### Linux / macOS
 
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build .
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ```
 
 #### Windows (Visual Studio)
 
 ```powershell
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
+cmake -S . -B build
+cmake --build build --config Release
 ```
 
 #### Windows (MinGW)
 
 ```bash
-mkdir build
-cd build
-cmake -G "MinGW Makefiles" ..
-cmake --build .
+cmake -S . -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ```
 
 ### Running Tests
@@ -137,10 +125,6 @@ cmake --build .
 ```bash
 # From project root directory
 ctest --test-dir build -C Release --output-on-failure
-
-# Or from build directory
-cd build
-ctest -C Release --output-on-failure
 
 # For Debug configuration
 ctest --test-dir build -C Debug --output-on-failure
