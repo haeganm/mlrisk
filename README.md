@@ -58,38 +58,39 @@ Perfect for algorithmic trading systems, risk management tools, and quantitative
 
 ```bash
 git clone https://github.com/haeganm/ML-Library---Risk-Position-Sizing.git
-cd mlrisk
+cd ML-Library---Risk-Position-Sizing
 ```
 
 ### 2. Build the Library
 
 ```bash
 # Create build directory
-mkdir build && cd build
+mkdir build
+cd build
 
 # Configure with CMake
 cmake ..
 
 # Build
-cmake --build .
+cmake --build . --config Release
 ```
 
 ### 3. Run Tests
 
 ```bash
-# Run all tests
-ctest
+# Run all tests (from build directory)
+ctest --test-dir build -C Release --output-on-failure
 
 # Or run directly
-./mlrisk_tests  # Linux/macOS
-.\Debug\mlrisk_tests.exe  # Windows
+./build/Release/mlrisk_tests  # Linux/macOS
+.\build\Release\mlrisk_tests.exe  # Windows
 ```
 
 ### 4. Try the Demo
 
 ```bash
-./vol_target_demo  # Linux/macOS
-.\Debug\vol_target_demo.exe  # Windows
+./build/Release/vol_target_demo  # Linux/macOS
+.\build\Release\vol_target_demo.exe  # Windows
 ```
 
 ## Installation
@@ -110,7 +111,7 @@ ctest
 mkdir build
 cd build
 cmake ..
-make
+cmake --build .
 ```
 
 #### Windows (Visual Studio)
@@ -134,15 +135,15 @@ cmake --build .
 ### Running Tests
 
 ```bash
-# From build directory
-ctest
+# From project root directory
+ctest --test-dir build -C Release --output-on-failure
 
-# Or with verbose output
-ctest --output-on-failure
+# Or from build directory
+cd build
+ctest -C Release --output-on-failure
 
-# For Visual Studio multi-config generators
-ctest -C Debug
-ctest -C Release
+# For Debug configuration
+ctest --test-dir build -C Debug --output-on-failure
 ```
 
 ## Usage
@@ -160,7 +161,7 @@ int main(void) {
     size_t n = 5;
     
     // 1. Compute EWMA volatility
-    double sigma[n];
+    double sigma[5];  // Fixed size array (MSVC compatible)
     mlr_status status = risk_forecast_ewma(returns, n, 0.94, sigma);
     if (status != MLR_OK) {
         fprintf(stderr, "Error computing volatility\n");
@@ -168,7 +169,7 @@ int main(void) {
     }
     
     // 2. Compute position sizes using volatility targeting
-    double positions[n];
+    double positions[5];  // Fixed size array (MSVC compatible)
     status = vol_target_position(
         sigma,           // volatility forecast
         0.01,            // target volatility (1% per-period)

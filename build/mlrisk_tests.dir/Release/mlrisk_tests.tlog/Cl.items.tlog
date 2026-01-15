@@ -1,6 +1,0 @@
-C:\MLLibraryRisk\tests\test_main.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_main.obj
-C:\MLLibraryRisk\tests\test_rolling.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_rolling.obj
-C:\MLLibraryRisk\tests\test_risk.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_risk.obj
-C:\MLLibraryRisk\tests\test_sizing.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_sizing.obj
-C:\MLLibraryRisk\tests\test_split.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_split.obj
-C:\MLLibraryRisk\tests\test_linreg.c;C:\MLLibraryRisk\build\mlrisk_tests.dir\Release\test_linreg.obj
