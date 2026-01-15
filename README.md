@@ -10,6 +10,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#overview)
+- [Disclaimer](#-disclaimer)
 - [Features](#features)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
@@ -20,7 +21,7 @@
 
 ## Overview
 
-**mlrisk** is a production-ready C11 static library designed for quantitative finance applications. It provides essential tools for:
+**mlrisk** is a lightweight reference implementation of a C11 static library focused on correctness and portability for quantitative finance applications. It provides essential tools for:
 
 - 📊 **Volatility Forecasting**: EWMA-based volatility estimation with optional linear regression models
 - 📈 **Position Sizing**: Volatility targeting and risk capping with leverage constraints
@@ -29,9 +30,13 @@
 
 Perfect for algorithmic trading systems, risk management tools, and quantitative research.
 
+## ⚠️ Disclaimer
+
+**Disclaimer:** This project is for educational and research purposes only and does not constitute financial, investment, or trading advice. Trading involves risk, including the possible loss of principal. Use at your own risk.
+
 ## Features
 
-✨ **Production Ready**
+✨ **Focused on Correctness & Portability**
 - Pure C11, zero external dependencies
 - Cross-platform (Windows, macOS, Linux)
 - Comprehensive unit tests with 100% pass rate
@@ -52,7 +57,7 @@ Perfect for algorithmic trading systems, risk management tools, and quantitative
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/mlrisk.git
+git clone https://github.com/haeganm/ML-Library---Risk-Position-Sizing.git
 cd mlrisk
 ```
 
