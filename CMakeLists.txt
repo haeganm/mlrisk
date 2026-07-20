@@ -1,18 +1,14 @@
 cmake_minimum_required(VERSION 3.15)
-project(mlrisk VERSION 1.0.0 LANGUAGES C)
+project(mlrisk VERSION 2.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # Compiler flags
 if(MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
-    # Add /WX after stabilization
-    # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4 /WX")
 else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
-    # Add -Werror after stabilization
-    # set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic -Werror")
 endif()
 
 # Library sources
@@ -70,3 +66,23 @@ add_test(NAME mlrisk_tests COMMAND $<TARGET_FILE:mlrisk_tests>)
 add_executable(vol_target_demo examples/vol_target_demo.c)
 target_link_libraries(vol_target_demo PRIVATE mlrisk)
 target_include_directories(vol_target_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Install / export so find_package(mlrisk) works
+add_library(mlrisk::mlrisk ALIAS mlrisk)
+include(GNUInstallDirs)
+install(TARGETS mlrisk EXPORT mlriskTargets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT mlriskTargets NAMESPACE mlrisk::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mlrisk)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/mlriskConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/mlriskConfig.cmake
+    "include(\"\${CMAKE_CURRENT_LIST_DIR}/mlriskTargets.cmake\")\n")
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/mlriskConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/mlriskConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mlrisk)
