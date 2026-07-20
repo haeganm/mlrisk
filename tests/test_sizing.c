@@ -105,26 +105,27 @@ static int test_vol_target_position_decreasing_with_sigma(void) {
     return 0;
 }
 
-static int test_risk_cap_position_basic(void) {
+static int test_vol_target_position_as_risk_cap(void) {
+    // Risk capping is the same formula with target_vol read as the risk cap
     double sigma[] = {0.01, 0.02};
     double price[] = {100.0, 100.0};
     double position_out[2];
     double risk_cap = 0.02; // 2% risk per position
     double equity = 10000.0;
     double max_leverage = 2.0;
-    
-    mlr_status status = risk_cap_position(
+
+    mlr_status status = vol_target_position(
         sigma, risk_cap, equity, price, max_leverage, 2, position_out
     );
-    ASSERT(status == MLR_OK, "risk_cap_position should return MLR_OK");
-    
+    ASSERT(status == MLR_OK, "vol_target_position should return MLR_OK");
+
     // position[0] = (0.02/0.01) * (10000/100) = 200.0
     ASSERT(fabs(position_out[0] - 200.0) < TOLERANCE, "position[0] should be 200.0");
-    
+
     // position[1] = (0.02/0.02) * (10000/100) = 100.0
     ASSERT(fabs(position_out[1] - 100.0) < TOLERANCE, "position[1] should be 100.0");
-    
-    printf("  PASS: risk_cap_position basic\n");
+
+    printf("  PASS: vol_target_position as risk cap\n");
     return 0;
 }
 
@@ -154,7 +155,23 @@ static int test_sizing_invalid_inputs(void) {
         sigma, 0.01, 10000.0, price, -1.0, 1, position_out
     );
     ASSERT(status == MLR_EINVAL, "vol_target_position with negative leverage should return MLR_EINVAL");
-    
+
+    // Invalid target_vol (previously produced uncapped short positions)
+    status = vol_target_position(
+        sigma, -0.01, 10000.0, price, 2.0, 1, position_out
+    );
+    ASSERT(status == MLR_EINVAL, "vol_target_position with negative target_vol should return MLR_EINVAL");
+
+    status = vol_target_position(
+        sigma, 0.0, 10000.0, price, 2.0, 1, position_out
+    );
+    ASSERT(status == MLR_EINVAL, "vol_target_position with zero target_vol should return MLR_EINVAL");
+
+    status = vol_target_position(
+        sigma, MLR_NAN, 10000.0, price, 2.0, 1, position_out
+    );
+    ASSERT(status == MLR_EINVAL, "vol_target_position with NaN target_vol should return MLR_EINVAL");
+
     printf("  PASS: sizing invalid inputs\n");
     return 0;
 }
@@ -165,7 +182,7 @@ int test_sizing(void) {
     failures += test_vol_target_position_nan_sigma();
     failures += test_vol_target_position_leverage_cap();
     failures += test_vol_target_position_decreasing_with_sigma();
-    failures += test_risk_cap_position_basic();
+    failures += test_vol_target_position_as_risk_cap();
     failures += test_sizing_invalid_inputs();
     return failures;
 }
