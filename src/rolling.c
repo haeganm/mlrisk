@@ -17,17 +17,18 @@ mlr_status mlr_rolling_mean(const double *x, size_t n, size_t window, double *ou
         return MLR_OK;
     }
 
-    // O(n) sliding sum. Running-sum drift is negligible for return-scale data;
-    // mlr_rolling_std uses the drift-resistant Welford path.
+    // O(n) sliding sum on offset-shifted data: accumulating (x - x[0]) keeps
+    // precision when the series has a large common level (prices, index values)
+    double offset = x[0];
     double sum = 0.0;
     for (size_t j = 0; j < window; j++) {
-        sum += x[j];
+        sum += x[j] - offset;
     }
-    out[window - 1] = sum / (double)window;
+    out[window - 1] = offset + sum / (double)window;
 
     for (size_t i = window; i < n; i++) {
         sum += x[i] - x[i - window];
-        out[i] = sum / (double)window;
+        out[i] = offset + sum / (double)window;
     }
 
     return MLR_OK;
@@ -58,20 +59,25 @@ mlr_status mlr_rolling_std(const double *x, size_t n, size_t window, double *out
 
     double w = (double)window;
 
+    // Std is shift-invariant: work on offset-shifted data so a large common
+    // level (prices, index values) doesn't destroy precision in the updates
+    double offset = x[0];
+
     // Initialize first window with standard Welford accumulation
     double mean = 0.0;
     double m2 = 0.0;
     for (size_t j = 0; j < window; j++) {
-        double delta = x[j] - mean;
+        double xs = x[j] - offset;
+        double delta = xs - mean;
         mean += delta / (double)(j + 1);
-        m2 += delta * (x[j] - mean);
+        m2 += delta * (xs - mean);
     }
     out[window - 1] = sqrt(fmax(m2, 0.0) / w);
 
     // Slide: remove the oldest sample, add the newest (rolling Welford updates)
     for (size_t i = window; i < n; i++) {
-        double x_old = x[i - window];
-        double x_new = x[i];
+        double x_old = x[i - window] - offset;
+        double x_new = x[i] - offset;
 
         double mean_removed = (w * mean - x_old) / (w - 1.0);
         m2 -= (x_old - mean) * (x_old - mean_removed);

@@ -10,6 +10,10 @@
  *
  * All outputs are per-period volatility (sigma), matching the rest of the
  * library. See the EWMA estimator in rolling.h.
+ *
+ * Note on range estimators: with discretely sampled bars they carry a small
+ * downward bias (the observed high/low understate the continuous extremes);
+ * expect readings a few percent below true volatility on e.g. 390-tick bars.
  */
 
 #ifdef __cplusplus

@@ -219,6 +219,36 @@ static int test_rolling_std_edge_cases(void) {
     return 0;
 }
 
+static int test_rolling_shift_invariance(void) {
+    // Std is shift-invariant and mean shifts exactly; a large common level
+    // (prices, index values) must not destroy precision
+    enum { N = 500, W = 20 };
+    static double base[N], shifted[N], std_base[N], std_shifted[N];
+    static double mean_base[N], mean_shifted[N];
+    const double OFFSET = 1e9;
+
+    unsigned long long state = 777;
+    for (size_t i = 0; i < N; i++) {
+        base[i] = lcg_next(&state);
+        shifted[i] = base[i] + OFFSET;
+    }
+
+    ASSERT(mlr_rolling_std(base, N, W, std_base) == MLR_OK, "base std OK");
+    ASSERT(mlr_rolling_std(shifted, N, W, std_shifted) == MLR_OK, "shifted std OK");
+    ASSERT(mlr_rolling_mean(base, N, W, mean_base) == MLR_OK, "base mean OK");
+    ASSERT(mlr_rolling_mean(shifted, N, W, mean_shifted) == MLR_OK, "shifted mean OK");
+
+    for (size_t i = W - 1; i < N; i++) {
+        ASSERT(fabs(std_shifted[i] - std_base[i]) < 1e-6,
+               "std should be invariant under a 1e9 level shift");
+        ASSERT(fabs((mean_shifted[i] - OFFSET) - mean_base[i]) < 1e-6,
+               "mean should shift exactly under a 1e9 level shift");
+    }
+
+    printf("  PASS: shift invariance at offset 1e9\n");
+    return 0;
+}
+
 int test_rolling(void) {
     int failures = 0;
     failures += test_rolling_mean_basic();
@@ -226,6 +256,7 @@ int test_rolling(void) {
     failures += test_rolling_std_basic();
     failures += test_rolling_sliding_consistency();
     failures += test_rolling_std_edge_cases();
+    failures += test_rolling_shift_invariance();
     failures += test_ewma_vol_basic();
     failures += test_ewma_vol_regime_change();
     failures += test_ewma_vol_invalid_lambda();
