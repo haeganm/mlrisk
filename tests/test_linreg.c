@@ -1,5 +1,4 @@
 #include "mlrisk/linreg.h"
-#include "mlrisk/risk.h"
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -112,10 +111,93 @@ static int test_linreg_invalid_inputs(void) {
     return 0;
 }
 
+static int test_lin_model_init_free(void) {
+    mlr_lin_model model;
+
+    mlr_status status = mlr_lin_model_init(&model, 5, 0.01);
+    ASSERT(status == MLR_OK, "mlr_lin_model_init should return MLR_OK");
+    ASSERT(model.d == 5, "model.d should be 5");
+    ASSERT(model.ridge == 0.01, "model.ridge should be 0.01");
+    ASSERT(model.w != NULL, "model.w should be allocated");
+    ASSERT(model.b == 0.0, "model.b should be 0.0");
+
+    mlr_lin_model_free(&model);
+    ASSERT(model.w == NULL, "model.w should be NULL after free");
+    ASSERT(model.d == 0, "model.d should be 0 after free");
+
+    status = mlr_lin_model_init(NULL, 5, 0.01);
+    ASSERT(status == MLR_EINVAL, "mlr_lin_model_init with NULL should return MLR_EINVAL");
+
+    status = mlr_lin_model_init(&model, 0, 0.01);
+    ASSERT(status == MLR_EINVAL, "mlr_lin_model_init with d=0 should return MLR_EINVAL");
+
+    printf("  PASS: lin_model init/free\n");
+    return 0;
+}
+
+static int test_linreg_uninitialized_model(void) {
+    // Previously segfaulted: fit into a model that was never initialized
+    double X[] = {0.0, 1.0, 2.0};
+    double y[] = {1.0, 3.0, 5.0};
+
+    mlr_lin_model model;
+    model.d = 1;
+    model.w = NULL;
+
+    mlr_status status = linreg_fit(X, y, 3, 1, 0.01, &model);
+    ASSERT(status == MLR_EINVAL, "linreg_fit on uninitialized model should return MLR_EINVAL");
+
+    printf("  PASS: linreg uninitialized model rejected\n");
+    return 0;
+}
+
+static int test_linreg_scale_invariance(void) {
+    // y = 2e8 * x + 1 with tiny-scale features; the old absolute 1e-10
+    // singularity threshold falsely rejected this system
+    double X[] = {0.0, 1e-8, 2e-8, 3e-8, 4e-8};
+    double y[] = {1.0, 3.0, 5.0, 7.0, 9.0};
+
+    mlr_lin_model model;
+    ASSERT(mlr_lin_model_init(&model, 1, 0.0) == MLR_OK, "init should succeed");
+
+    mlr_status status = linreg_fit(X, y, 5, 1, 0.0, &model);
+    ASSERT(status == MLR_OK, "linreg_fit on small-scale features should return MLR_OK");
+    ASSERT(fabs(model.w[0] - 2e8) / 2e8 < 1e-6, "slope should be recovered at small scale");
+
+    mlr_lin_model_free(&model);
+    printf("  PASS: linreg scale invariance\n");
+    return 0;
+}
+
+static int test_linreg_singular_matrix(void) {
+    // Duplicate columns with no ridge: genuinely singular
+    double X[] = {
+        1.0, 1.0,
+        2.0, 2.0,
+        3.0, 3.0,
+        4.0, 4.0
+    };
+    double y[] = {1.0, 2.0, 3.0, 4.0};
+
+    mlr_lin_model model;
+    ASSERT(mlr_lin_model_init(&model, 2, 0.0) == MLR_OK, "init should succeed");
+
+    mlr_status status = linreg_fit(X, y, 4, 2, 0.0, &model);
+    ASSERT(status == MLR_EDOMAIN, "linreg_fit on singular matrix should return MLR_EDOMAIN");
+
+    mlr_lin_model_free(&model);
+    printf("  PASS: linreg singular matrix detected\n");
+    return 0;
+}
+
 int test_linreg(void) {
     int failures = 0;
     failures += test_linreg_simple();
     failures += test_linreg_2d();
     failures += test_linreg_invalid_inputs();
+    failures += test_lin_model_init_free();
+    failures += test_linreg_uninitialized_model();
+    failures += test_linreg_scale_invariance();
+    failures += test_linreg_singular_matrix();
     return failures;
 }

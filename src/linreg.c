@@ -2,6 +2,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
+
+mlr_status mlr_lin_model_init(mlr_lin_model *model, size_t d, double ridge) {
+    if (model == NULL || d == 0) {
+        return MLR_EINVAL;
+    }
+
+    model->d = d;
+    model->ridge = ridge;
+    model->b = 0.0;
+    model->w = (double *)calloc(d, sizeof(double));
+
+    if (model->w == NULL) {
+        return MLR_ENOMEM;
+    }
+
+    return MLR_OK;
+}
+
+void mlr_lin_model_free(mlr_lin_model *model) {
+    if (model != NULL) {
+        free(model->w);
+        model->w = NULL;
+        model->d = 0;
+    }
+}
 
 // Helper: Solve linear system Ax = b using Gaussian elimination with partial pivoting
 // A is d x d, b is length d, x is output (length d)
@@ -12,12 +38,20 @@ static mlr_status solve_linear_system(double *A, double *b, size_t d, double *x)
         return MLR_ENOMEM;
     }
 
+    double max_a = 0.0;
     for (size_t i = 0; i < d; i++) {
         for (size_t j = 0; j < d; j++) {
             aug[i * (d + 1) + j] = A[i * d + j];
+            if (fabs(A[i * d + j]) > max_a) {
+                max_a = fabs(A[i * d + j]);
+            }
         }
         aug[i * (d + 1) + d] = b[i];
     }
+
+    // Relative singularity threshold: scales with the matrix instead of the
+    // absolute 1e-10 cutoff, which broke on very small or very large features
+    double singular_tol = fmax(max_a, 1.0) * (double)d * DBL_EPSILON;
 
     // Gaussian elimination with partial pivoting
     for (size_t col = 0; col < d; col++) {
@@ -33,7 +67,7 @@ static mlr_status solve_linear_system(double *A, double *b, size_t d, double *x)
         }
 
         // Check for singular matrix
-        if (max_val < 1e-10) {
+        if (max_val < singular_tol) {
             free(aug);
             return MLR_EDOMAIN;
         }
@@ -83,7 +117,7 @@ mlr_status linreg_fit(
     if (n == 0 || d == 0) {
         return MLR_EINVAL;
     }
-    if (model_out->d != d) {
+    if (model_out->d != d || model_out->w == NULL) {
         return MLR_EINVAL;
     }
 

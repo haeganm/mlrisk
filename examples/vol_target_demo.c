@@ -77,7 +77,7 @@ int main(void) {
     // Compute EWMA volatility
     printf("Computing EWMA volatility (lambda=0.94)...\n");
     double lambda = 0.94;
-    mlr_status status = risk_forecast_ewma(returns, N, lambda, sigma);
+    mlr_status status = ewma_vol(returns, N, lambda, sigma);
     
     if (status != MLR_OK) {
         fprintf(stderr, "Error computing EWMA volatility: %d\n", status);

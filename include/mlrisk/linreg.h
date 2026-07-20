@@ -2,13 +2,12 @@
 #define MLRISK_LINREG_H
 
 #include "mlrisk/types.h"
-#include "mlrisk/risk.h"
 #include <stddef.h>
 
 /**
  * @file linreg.h
- * @brief Linear regression for volatility forecasting (optional v1 feature)
- * 
+ * @brief Ridge linear regression for volatility forecasting
+ *
  * Provides closed-form ridge regression for small feature dimensions.
  * Uses Gaussian elimination with partial pivoting to solve normal equations.
  */
@@ -16,6 +15,35 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Linear model structure
+ */
+typedef struct {
+    size_t d;        /**< Feature dimension */
+    double *w;       /**< Weight vector (length d) */
+    double b;        /**< Bias/intercept */
+    double ridge;    /**< Ridge regularization parameter */
+} mlr_lin_model;
+
+/**
+ * @brief Initialize a linear model structure
+ *
+ * Allocates memory for weight vector w.
+ *
+ * @param model Pointer to model structure to initialize
+ * @param d Feature dimension
+ * @param ridge Ridge regularization parameter
+ * @return MLR_OK on success, MLR_EINVAL on invalid input, MLR_ENOMEM on allocation failure
+ */
+mlr_status mlr_lin_model_init(mlr_lin_model *model, size_t d, double ridge);
+
+/**
+ * @brief Free memory allocated for a linear model
+ *
+ * @param model Pointer to model structure to free
+ */
+void mlr_lin_model_free(mlr_lin_model *model);
 
 /**
  * @brief Fit a linear regression model using ridge regression
