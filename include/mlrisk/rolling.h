@@ -30,9 +30,12 @@ mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out);
 /**
  * @brief Compute rolling standard deviation of a time series
  * 
- * Uses a numerically stable algorithm (Welford's method adapted for rolling windows).
- * For each index i, computes the std dev of x[i-window+1] to x[i] (inclusive).
- * If i < window-1, sets out[i] = MLR_NAN.
+ * O(n) sliding Welford updates (numerically stable). For each index i, computes
+ * the std dev of x[i-window+1] to x[i] (inclusive). If i < window-1, sets
+ * out[i] = MLR_NAN.
+ *
+ * Uses population variance (divides by window, not window-1); note this differs
+ * from pandas rolling().std(), which defaults to the sample convention.
  * 
  * @param x Input array of length n
  * @param n Length of input array

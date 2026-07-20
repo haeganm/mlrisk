@@ -154,11 +154,78 @@ static int test_ewma_vol_invalid_lambda(void) {
     return 0;
 }
 
+// Deterministic LCG so results are identical on every platform
+static double lcg_next(unsigned long long *state) {
+    *state = *state * 6364136223846793005ULL + 1442695040888963407ULL;
+    return ((double)(*state >> 11) / 9007199254740992.0) - 0.5;
+}
+
+static int test_rolling_sliding_consistency(void) {
+    enum { N = 1000 };
+    static double x[N], fast_mean[N], fast_std[N];
+    unsigned long long state = 42;
+    for (size_t i = 0; i < N; i++) {
+        x[i] = lcg_next(&state) * 0.05;
+    }
+
+    size_t windows[] = {2, 5, 50};
+    for (size_t wi = 0; wi < 3; wi++) {
+        size_t w = windows[wi];
+        ASSERT(rolling_mean(x, N, w, fast_mean) == MLR_OK, "sliding mean OK");
+        ASSERT(rolling_std(x, N, w, fast_std) == MLR_OK, "sliding std OK");
+
+        for (size_t i = w - 1; i < N; i++) {
+            double mean = 0.0;
+            for (size_t j = i - w + 1; j <= i; j++) mean += x[j];
+            mean /= (double)w;
+
+            double var = 0.0;
+            for (size_t j = i - w + 1; j <= i; j++) {
+                double d = x[j] - mean;
+                var += d * d;
+            }
+            var /= (double)w;
+
+            ASSERT(fabs(fast_mean[i] - mean) < TOLERANCE, "sliding mean matches naive recompute");
+            ASSERT(fabs(fast_std[i] - sqrt(var)) < TOLERANCE, "sliding std matches naive recompute");
+        }
+    }
+
+    printf("  PASS: sliding algorithms match naive recompute\n");
+    return 0;
+}
+
+static int test_rolling_std_edge_cases(void) {
+    double constant[10] = {3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5};
+    double out[10];
+
+    // Constant input: variance must clamp to exactly 0
+    ASSERT(rolling_std(constant, 10, 4, out) == MLR_OK, "constant std OK");
+    for (size_t i = 3; i < 10; i++) {
+        ASSERT(out[i] == 0.0, "std of constant array should be exactly 0");
+    }
+
+    // window > n: all NAN
+    ASSERT(rolling_std(constant, 3, 5, out) == MLR_OK, "window>n std OK");
+    for (size_t i = 0; i < 3; i++) {
+        ASSERT(mlr_isnan(out[i]), "std should be NAN when window>n");
+    }
+
+    // window == 1: zeros
+    ASSERT(rolling_std(constant, 3, 1, out) == MLR_OK, "window=1 std OK");
+    ASSERT(out[0] == 0.0 && out[2] == 0.0, "std with window=1 should be 0");
+
+    printf("  PASS: rolling_std edge cases\n");
+    return 0;
+}
+
 int test_rolling(void) {
     int failures = 0;
     failures += test_rolling_mean_basic();
     failures += test_rolling_mean_edge_cases();
     failures += test_rolling_std_basic();
+    failures += test_rolling_sliding_consistency();
+    failures += test_rolling_std_edge_cases();
     failures += test_ewma_vol_basic();
     failures += test_ewma_vol_regime_change();
     failures += test_ewma_vol_invalid_lambda();
