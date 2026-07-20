@@ -25,7 +25,7 @@ extern "C" {
  * @param out Output array of length n (must be pre-allocated)
  * @return MLR_OK on success, MLR_EINVAL on invalid input
  */
-mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out);
+mlr_status mlr_rolling_mean(const double *x, size_t n, size_t window, double *out);
 
 /**
  * @brief Compute rolling standard deviation of a time series
@@ -43,7 +43,7 @@ mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out);
  * @param out Output array of length n (must be pre-allocated)
  * @return MLR_OK on success, MLR_EINVAL on invalid input
  */
-mlr_status rolling_std(const double *x, size_t n, size_t window, double *out);
+mlr_status mlr_rolling_std(const double *x, size_t n, size_t window, double *out);
 
 /**
  * @brief Compute EWMA (Exponentially Weighted Moving Average) volatility
@@ -59,7 +59,7 @@ mlr_status rolling_std(const double *x, size_t n, size_t window, double *out);
  * @param out Output array of per-period sigma values (length n, must be pre-allocated)
  * @return MLR_OK on success, MLR_EINVAL on invalid input
  */
-mlr_status ewma_vol(const double *returns, size_t n, double lambda, double *out);
+mlr_status mlr_ewma_vol(const double *returns, size_t n, double lambda, double *out);
 
 #ifdef __cplusplus
 }

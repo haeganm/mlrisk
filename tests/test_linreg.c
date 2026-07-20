@@ -24,8 +24,8 @@ static int test_linreg_simple(void) {
     mlr_status status = mlr_lin_model_init(&model, d, ridge);
     ASSERT(status == MLR_OK, "mlr_lin_model_init should return MLR_OK");
     
-    status = linreg_fit(X, y, n, d, ridge, &model);
-    ASSERT(status == MLR_OK, "linreg_fit should return MLR_OK");
+    status = mlr_linreg_fit(X, y, n, d, ridge, &model);
+    ASSERT(status == MLR_OK, "mlr_linreg_fit should return MLR_OK");
     
     // Check coefficients (should be close to w=2, b=1)
     ASSERT(fabs(model.w[0] - 2.0) < 0.1, "Weight should be close to 2.0");
@@ -34,8 +34,8 @@ static int test_linreg_simple(void) {
     // Test prediction
     double X_test[] = {5.0, 6.0};
     double y_pred[2];
-    status = linreg_predict(X_test, 2, d, &model, y_pred);
-    ASSERT(status == MLR_OK, "linreg_predict should return MLR_OK");
+    status = mlr_linreg_predict(X_test, 2, d, &model, y_pred);
+    ASSERT(status == MLR_OK, "mlr_linreg_predict should return MLR_OK");
     
     // y_pred[0] should be close to 2*5 + 1 = 11
     ASSERT(fabs(y_pred[0] - 11.0) < 0.5, "Prediction should be close to expected");
@@ -64,14 +64,14 @@ static int test_linreg_2d(void) {
     mlr_status status = mlr_lin_model_init(&model, d, ridge);
     ASSERT(status == MLR_OK, "mlr_lin_model_init should return MLR_OK");
     
-    status = linreg_fit(X, y, n, d, ridge, &model);
-    ASSERT(status == MLR_OK, "linreg_fit should return MLR_OK");
+    status = mlr_linreg_fit(X, y, n, d, ridge, &model);
+    ASSERT(status == MLR_OK, "mlr_linreg_fit should return MLR_OK");
     
     // Check that predictions are reasonable
     double X_test[] = {1.0, 1.0};
     double y_pred[1];
-    status = linreg_predict(X_test, 1, d, &model, y_pred);
-    ASSERT(status == MLR_OK, "linreg_predict should return MLR_OK");
+    status = mlr_linreg_predict(X_test, 1, d, &model, y_pred);
+    ASSERT(status == MLR_OK, "mlr_linreg_predict should return MLR_OK");
     
     // Should be close to 1*1 + 2*1 + 3 = 6
     ASSERT(fabs(y_pred[0] - 6.0) < 1.0, "Prediction should be reasonable");
@@ -91,19 +91,19 @@ static int test_linreg_invalid_inputs(void) {
     double y[] = {1.0, 2.0};
     
     // NULL inputs
-    status = linreg_fit(NULL, y, 2, 2, 0.01, &model);
-    ASSERT(status == MLR_EINVAL, "linreg_fit with NULL X should return MLR_EINVAL");
+    status = mlr_linreg_fit(NULL, y, 2, 2, 0.01, &model);
+    ASSERT(status == MLR_EINVAL, "mlr_linreg_fit with NULL X should return MLR_EINVAL");
     
-    status = linreg_fit(X, NULL, 2, 2, 0.01, &model);
-    ASSERT(status == MLR_EINVAL, "linreg_fit with NULL y should return MLR_EINVAL");
+    status = mlr_linreg_fit(X, NULL, 2, 2, 0.01, &model);
+    ASSERT(status == MLR_EINVAL, "mlr_linreg_fit with NULL y should return MLR_EINVAL");
     
     // Dimension mismatch
-    status = linreg_fit(X, y, 2, 3, 0.01, &model);
-    ASSERT(status == MLR_EINVAL, "linreg_fit with dimension mismatch should return MLR_EINVAL");
+    status = mlr_linreg_fit(X, y, 2, 3, 0.01, &model);
+    ASSERT(status == MLR_EINVAL, "mlr_linreg_fit with dimension mismatch should return MLR_EINVAL");
     
     double out[1];
-    status = linreg_predict(NULL, 1, 2, &model, out);
-    ASSERT(status == MLR_EINVAL, "linreg_predict with NULL X should return MLR_EINVAL");
+    status = mlr_linreg_predict(NULL, 1, 2, &model, out);
+    ASSERT(status == MLR_EINVAL, "mlr_linreg_predict with NULL X should return MLR_EINVAL");
     
     mlr_lin_model_free(&model);
     
@@ -144,8 +144,8 @@ static int test_linreg_uninitialized_model(void) {
     model.d = 1;
     model.w = NULL;
 
-    mlr_status status = linreg_fit(X, y, 3, 1, 0.01, &model);
-    ASSERT(status == MLR_EINVAL, "linreg_fit on uninitialized model should return MLR_EINVAL");
+    mlr_status status = mlr_linreg_fit(X, y, 3, 1, 0.01, &model);
+    ASSERT(status == MLR_EINVAL, "mlr_linreg_fit on uninitialized model should return MLR_EINVAL");
 
     printf("  PASS: linreg uninitialized model rejected\n");
     return 0;
@@ -160,8 +160,8 @@ static int test_linreg_scale_invariance(void) {
     mlr_lin_model model;
     ASSERT(mlr_lin_model_init(&model, 1, 0.0) == MLR_OK, "init should succeed");
 
-    mlr_status status = linreg_fit(X, y, 5, 1, 0.0, &model);
-    ASSERT(status == MLR_OK, "linreg_fit on small-scale features should return MLR_OK");
+    mlr_status status = mlr_linreg_fit(X, y, 5, 1, 0.0, &model);
+    ASSERT(status == MLR_OK, "mlr_linreg_fit on small-scale features should return MLR_OK");
     ASSERT(fabs(model.w[0] - 2e8) / 2e8 < 1e-6, "slope should be recovered at small scale");
 
     mlr_lin_model_free(&model);
@@ -182,8 +182,8 @@ static int test_linreg_singular_matrix(void) {
     mlr_lin_model model;
     ASSERT(mlr_lin_model_init(&model, 2, 0.0) == MLR_OK, "init should succeed");
 
-    mlr_status status = linreg_fit(X, y, 4, 2, 0.0, &model);
-    ASSERT(status == MLR_EDOMAIN, "linreg_fit on singular matrix should return MLR_EDOMAIN");
+    mlr_status status = mlr_linreg_fit(X, y, 4, 2, 0.0, &model);
+    ASSERT(status == MLR_EDOMAIN, "mlr_linreg_fit on singular matrix should return MLR_EDOMAIN");
 
     mlr_lin_model_free(&model);
     printf("  PASS: linreg singular matrix detected\n");

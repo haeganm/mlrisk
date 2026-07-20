@@ -1,7 +1,7 @@
 #include "mlrisk/sizing.h"
 #include <math.h>
 
-mlr_status vol_target_position(
+mlr_status mlr_vol_target_position(
     const double *sigma,
     double target_vol,
     double equity,

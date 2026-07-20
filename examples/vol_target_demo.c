@@ -77,7 +77,7 @@ int main(void) {
     // Compute EWMA volatility
     printf("Computing EWMA volatility (lambda=0.94)...\n");
     double lambda = 0.94;
-    mlr_status status = ewma_vol(returns, N, lambda, sigma);
+    mlr_status status = mlr_ewma_vol(returns, N, lambda, sigma);
     
     if (status != MLR_OK) {
         fprintf(stderr, "Error computing EWMA volatility: %d\n", status);
@@ -90,7 +90,7 @@ int main(void) {
     double equity = 100000.0;   // $100k account
     double max_leverage = 2.0;  // 2x maximum leverage
     
-    status = vol_target_position(
+    status = mlr_vol_target_position(
         sigma, target_vol, equity, prices, max_leverage, N, positions
     );
     

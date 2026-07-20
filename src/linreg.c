@@ -103,7 +103,7 @@ static mlr_status solve_linear_system(double *A, double *b, size_t d, double *x)
     return MLR_OK;
 }
 
-mlr_status linreg_fit(
+mlr_status mlr_linreg_fit(
     const double *X,
     const double *y,
     size_t n,
@@ -197,7 +197,7 @@ mlr_status linreg_fit(
     return status;
 }
 
-mlr_status linreg_predict(
+mlr_status mlr_linreg_predict(
     const double *X,
     size_t n,
     size_t d,

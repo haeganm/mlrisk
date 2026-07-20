@@ -37,7 +37,7 @@ extern "C" {
  * @param position_out Output array of position sizes (length n, must be pre-allocated)
  * @return MLR_OK on success, MLR_EINVAL on invalid input
  */
-mlr_status vol_target_position(
+mlr_status mlr_vol_target_position(
     const double *sigma,
     double target_vol,
     double equity,

@@ -1,7 +1,7 @@
 #include "mlrisk/rolling.h"
 #include <math.h>
 
-mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out) {
+mlr_status mlr_rolling_mean(const double *x, size_t n, size_t window, double *out) {
     if (x == NULL || out == NULL) {
         return MLR_EINVAL;
     }
@@ -18,7 +18,7 @@ mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out) {
     }
 
     // O(n) sliding sum. Running-sum drift is negligible for return-scale data;
-    // rolling_std uses the drift-resistant Welford path.
+    // mlr_rolling_std uses the drift-resistant Welford path.
     double sum = 0.0;
     for (size_t j = 0; j < window; j++) {
         sum += x[j];
@@ -33,7 +33,7 @@ mlr_status rolling_mean(const double *x, size_t n, size_t window, double *out) {
     return MLR_OK;
 }
 
-mlr_status rolling_std(const double *x, size_t n, size_t window, double *out) {
+mlr_status mlr_rolling_std(const double *x, size_t n, size_t window, double *out) {
     if (x == NULL || out == NULL) {
         return MLR_EINVAL;
     }
@@ -88,7 +88,7 @@ mlr_status rolling_std(const double *x, size_t n, size_t window, double *out) {
     return MLR_OK;
 }
 
-mlr_status ewma_vol(const double *returns, size_t n, double lambda, double *out) {
+mlr_status mlr_ewma_vol(const double *returns, size_t n, double lambda, double *out) {
     if (returns == NULL || out == NULL) {
         return MLR_EINVAL;
     }

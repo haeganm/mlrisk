@@ -59,7 +59,7 @@ void mlr_lin_model_free(mlr_lin_model *model);
  * @param model_out Output model structure (must be initialized with mlr_lin_model_init)
  * @return MLR_OK on success, MLR_EINVAL on invalid input, MLR_EDOMAIN on singular matrix
  */
-mlr_status linreg_fit(
+mlr_status mlr_linreg_fit(
     const double *X,
     const double *y,
     size_t n,
@@ -80,7 +80,7 @@ mlr_status linreg_fit(
  * @param out Output predictions (length n, must be pre-allocated)
  * @return MLR_OK on success, MLR_EINVAL on invalid input
  */
-mlr_status linreg_predict(
+mlr_status mlr_linreg_predict(
     const double *X,
     size_t n,
     size_t d,
