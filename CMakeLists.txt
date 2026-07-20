@@ -43,6 +43,11 @@ target_include_directories(mlrisk PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
+# libm is a separate library on Unix toolchains
+if(UNIX)
+    target_link_libraries(mlrisk PUBLIC m)
+endif()
+
 # Enable testing
 enable_testing()
 
