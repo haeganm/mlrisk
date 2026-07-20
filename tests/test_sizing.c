@@ -176,8 +176,71 @@ static int test_sizing_invalid_inputs(void) {
     return 0;
 }
 
+static int test_kelly_fraction(void) {
+    // mean = 0.025, sample var = 0.0075 -> full Kelly 10/3, half Kelly 5/3
+    double returns[] = {0.1, -0.05, 0.1, -0.05};
+    double f = 0.0;
+
+    mlr_status status = mlr_kelly_fraction(returns, 4, 1.0, &f);
+    ASSERT(status == MLR_OK, "kelly should return MLR_OK");
+    ASSERT(fabs(f - 10.0 / 3.0) < TOLERANCE, "full Kelly should be 10/3");
+
+    status = mlr_kelly_fraction(returns, 4, 0.5, &f);
+    ASSERT(status == MLR_OK, "half kelly should return MLR_OK");
+    ASSERT(fabs(f - 5.0 / 3.0) < TOLERANCE, "half Kelly should be 5/3");
+
+    // Negative edge -> negative fraction
+    double losing[] = {-0.1, 0.05, -0.1, 0.05};
+    status = mlr_kelly_fraction(losing, 4, 1.0, &f);
+    ASSERT(status == MLR_OK, "negative-edge kelly should return MLR_OK");
+    ASSERT(f < 0.0, "negative edge should give negative Kelly fraction");
+
+    // Degenerate inputs
+    double constant[] = {0.01, 0.01, 0.01};
+    ASSERT(mlr_kelly_fraction(constant, 3, 1.0, &f) == MLR_EDOMAIN,
+           "zero variance should return MLR_EDOMAIN");
+    ASSERT(mlr_kelly_fraction(returns, 1, 1.0, &f) == MLR_EINVAL, "n<2 -> MLR_EINVAL");
+    ASSERT(mlr_kelly_fraction(returns, 4, 0.0, &f) == MLR_EINVAL, "fraction=0 -> MLR_EINVAL");
+    ASSERT(mlr_kelly_fraction(NULL, 4, 1.0, &f) == MLR_EINVAL, "NULL returns -> MLR_EINVAL");
+
+    printf("  PASS: kelly fraction\n");
+    return 0;
+}
+
+static int test_drawdown_scale(void) {
+    // Peaks 100,110,110,110,120; drawdowns 0,0,0.1,0.05,0
+    double equity[] = {100.0, 110.0, 99.0, 104.5, 120.0};
+    double scale[5];
+
+    mlr_status status = mlr_drawdown_scale(equity, 5, 0.2, scale);
+    ASSERT(status == MLR_OK, "drawdown_scale should return MLR_OK");
+    ASSERT(fabs(scale[0] - 1.0) < TOLERANCE, "scale[0] should be 1");
+    ASSERT(fabs(scale[1] - 1.0) < TOLERANCE, "scale[1] should be 1");
+    ASSERT(fabs(scale[2] - 0.5) < TOLERANCE, "scale[2] should be 0.5 (10% dd of 20% cap)");
+    ASSERT(fabs(scale[3] - 0.75) < TOLERANCE, "scale[3] should be 0.75");
+    ASSERT(fabs(scale[4] - 1.0) < TOLERANCE, "scale[4] should be 1 (new peak)");
+
+    // Drawdown beyond max_dd clamps to zero exposure
+    double crash[] = {100.0, 50.0};
+    status = mlr_drawdown_scale(crash, 2, 0.2, scale);
+    ASSERT(status == MLR_OK, "crash path should return MLR_OK");
+    ASSERT(scale[1] == 0.0, "drawdown past max_dd should scale to 0");
+
+    // Invalid parameters
+    ASSERT(mlr_drawdown_scale(equity, 5, 0.0, scale) == MLR_EINVAL, "max_dd=0 -> MLR_EINVAL");
+    ASSERT(mlr_drawdown_scale(equity, 5, 1.5, scale) == MLR_EINVAL, "max_dd>1 -> MLR_EINVAL");
+    double bad[] = {100.0, 0.0};
+    ASSERT(mlr_drawdown_scale(bad, 2, 0.2, scale) == MLR_EDOMAIN,
+           "non-positive equity -> MLR_EDOMAIN");
+
+    printf("  PASS: drawdown scale\n");
+    return 0;
+}
+
 int test_sizing(void) {
     int failures = 0;
+    failures += test_kelly_fraction();
+    failures += test_drawdown_scale();
     failures += test_vol_target_position_basic();
     failures += test_vol_target_position_nan_sigma();
     failures += test_vol_target_position_leverage_cap();
