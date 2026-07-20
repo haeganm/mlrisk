@@ -249,6 +249,56 @@ static int test_rolling_shift_invariance(void) {
     return 0;
 }
 
+static int test_rolling_nan_recovery(void) {
+    // A NaN (missing data) must only affect windows containing it - the
+    // sliding accumulators must recover once it leaves the window
+    enum { N = 20, W = 3 };
+    double x[N], mean_out[N], std_out[N];
+    unsigned long long state = 4242;
+    for (size_t i = 0; i < N; i++) {
+        x[i] = lcg_next(&state);
+    }
+    x[7] = MLR_NAN;
+    x[13] = INFINITY;
+
+    ASSERT(mlr_rolling_mean(x, N, W, mean_out) == MLR_OK, "mean with NaN OK");
+    ASSERT(mlr_rolling_std(x, N, W, std_out) == MLR_OK, "std with NaN OK");
+
+    for (size_t i = W - 1; i < N; i++) {
+        // Window [i-W+1, i] contains a bad value?
+        int has_bad = 0;
+        for (size_t j = i - W + 1; j <= i; j++) {
+            if (!mlr_isfinite(x[j])) has_bad = 1;
+        }
+
+        if (has_bad) {
+            ASSERT(mlr_isnan(mean_out[i]), "mean of window with bad value should be NAN");
+            ASSERT(mlr_isnan(std_out[i]), "std of window with bad value should be NAN");
+        } else {
+            // Compare against naive recompute
+            double mean = 0.0;
+            for (size_t j = i - W + 1; j <= i; j++) mean += x[j];
+            mean /= (double)W;
+            double var = 0.0;
+            for (size_t j = i - W + 1; j <= i; j++) {
+                double d = x[j] - mean;
+                var += d * d;
+            }
+            var /= (double)W;
+            ASSERT(fabs(mean_out[i] - mean) < TOLERANCE, "mean should recover after bad value");
+            ASSERT(fabs(std_out[i] - sqrt(var)) < TOLERANCE, "std should recover after bad value");
+        }
+    }
+
+    // window == 1: NaN in, NaN out; finite in, 0 out
+    ASSERT(mlr_rolling_std(x, N, 1, std_out) == MLR_OK, "window=1 with NaN OK");
+    ASSERT(mlr_isnan(std_out[7]), "window=1 std of NaN should be NAN");
+    ASSERT(std_out[8] == 0.0, "window=1 std of finite value should be 0");
+
+    printf("  PASS: NaN recovery\n");
+    return 0;
+}
+
 int test_rolling(void) {
     int failures = 0;
     failures += test_rolling_mean_basic();
@@ -257,6 +307,7 @@ int test_rolling(void) {
     failures += test_rolling_sliding_consistency();
     failures += test_rolling_std_edge_cases();
     failures += test_rolling_shift_invariance();
+    failures += test_rolling_nan_recovery();
     failures += test_ewma_vol_basic();
     failures += test_ewma_vol_regime_change();
     failures += test_ewma_vol_invalid_lambda();
