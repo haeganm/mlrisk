@@ -19,6 +19,7 @@ endif()
 set(MLRISK_SOURCES
     src/rolling.c
     src/sizing.c
+    src/vol.c
     src/split.c
     src/linreg.c
 )
@@ -28,6 +29,7 @@ set(MLRISK_HEADERS
     include/mlrisk/types.h
     include/mlrisk/rolling.h
     include/mlrisk/sizing.h
+    include/mlrisk/vol.h
     include/mlrisk/split.h
     include/mlrisk/linreg.h
     include/mlrisk/mlrisk.h
@@ -54,6 +56,7 @@ add_executable(mlrisk_tests
     tests/test_main.c
     tests/test_rolling.c
     tests/test_sizing.c
+    tests/test_vol.c
     tests/test_split.c
     tests/test_linreg.c
 )

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 extern int test_rolling(void);
+extern int test_vol(void);
 extern int test_sizing(void);
 extern int test_split(void);
 extern int test_linreg(void);
@@ -13,6 +14,10 @@ int main(void) {
 
     printf("=== Rolling Statistics Tests ===\n");
     failures += test_rolling();
+    printf("\n");
+
+    printf("=== Volatility Estimator Tests ===\n");
+    failures += test_vol();
     printf("\n");
 
     printf("=== Position Sizing Tests ===\n");

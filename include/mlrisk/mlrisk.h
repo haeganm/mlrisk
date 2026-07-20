@@ -10,6 +10,7 @@
 
 #include "mlrisk/types.h"
 #include "mlrisk/rolling.h"
+#include "mlrisk/vol.h"
 #include "mlrisk/sizing.h"
 #include "mlrisk/split.h"
 #include "mlrisk/linreg.h"
