@@ -81,7 +81,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build and test the wheel
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v4.2.1
       - uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.label }}
